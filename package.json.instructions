@@ -1,0 +1,6 @@
+You need to install the sonner package:
+
+npm install sonner
+
+This will replace the deprecated toast component from shadcn/ui with the recommended sonner component.
+
