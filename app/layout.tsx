@@ -1,17 +1,10 @@
-import type React from "react"
-import { ClerkProvider } from "@clerk/nextjs"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "sonner"
-import { Inter } from "next/font/google"
-import "./globals.css"
+import { Inter } from 'next/font/google'
+import { ClerkProvider } from '@clerk/nextjs'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+import './globals.css'
 
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata = {
-  title: "BudgetMate - Personal Finance Tracker",
-  description: "Track your income, expenses, and budget goals with BudgetMate",
-    generator: 'v0.dev'
-}
+const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,
@@ -19,19 +12,32 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: '#000000',
+          colorText: '#000000',
+          colorTextSecondary: '#000000',
+          colorBackground: '#ffffff',
+          colorInputBackground: '#ffffff',
+        }
+      }}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    >
       <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <body className={`${inter.className} bg-background text-foreground`}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+            storageKey="budgetmate-theme"
+          >
             {children}
-            <Toaster position="bottom-right" />
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
   )
 }
-
-
-
-import './globals.css'
