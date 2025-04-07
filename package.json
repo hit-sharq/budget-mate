@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "latest",
     "@hookform/resolvers": "latest",
+    "@prisma/client": "latest",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
     "@radix-ui/react-aspect-ratio": "^1.1.1",
@@ -47,21 +49,20 @@
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "latest",
+    "prisma": "latest",
     "react": "^19",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
     "react-hook-form": "latest",
+    "react-redux": "^9.2.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
     "sonner": "latest",
+    "svix": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "latest",
-    "prisma": "latest",
-    "@clerk/nextjs": "latest",
-    "@prisma/client": "latest",
-    "svix": "latest"
+    "zod": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

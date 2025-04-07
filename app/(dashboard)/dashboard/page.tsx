@@ -1,6 +1,7 @@
-import { auth } from "@clerk/nextjs/server"
+'use client'
+
 import { redirect } from "next/navigation"
-import { getUserByClerkId, getMonthlyStats, getTransactions } from "@/lib/transaction-service"
+import { getMonthlyStats, getTransactions } from "@/lib/transaction-service"
 import { getBudgetSummary } from "@/lib/budget-service"
 import { getCurrentMonthYear, formatCurrency, getMonthName } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,27 +15,30 @@ import { Plus } from "lucide-react"
 import { DashboardCharts } from "@/components/dashboard-charts"
 import { RecentTransactions } from "@/components/recent-transactions"
 
-export default async function DashboardPage() {
-  const { userId: clerkId } = auth()
+interface BudgetSummary {
+  id: string
+  category: string
+  spent: number
+  monthlyLimit: number
+  percentage: number
+  remaining: number
+}
 
-  if (!clerkId) {
+interface DashboardPageProps {
+  userId: string
+}
+
+export default async function DashboardPage({ userId }: DashboardPageProps) {
+  if (!userId) {
     redirect("/")
   }
 
-  const user = await getUserByClerkId(clerkId)
-
-  if (!user) {
-    return <div>User not found</div>
-  }
-
   const { month, year } = getCurrentMonthYear()
-  const stats = await getMonthlyStats(user.id, month, year)
-  const budgetSummary = await getBudgetSummary(user.id, month, year)
-  const recentTransactions = await getTransactions(user.id, { limit: 5 })
+  const stats = await getMonthlyStats(userId, month, year)
+  const budgetSummary = await getBudgetSummary(userId, month, year)
+  const recentTransactions = await getTransactions(userId, { limit: 5 })
 
   const monthName = getMonthName(month)
-
-  // Prepare data for pie chart
   const pieData = Object.entries(stats.categorySummary).map(([category, amount]) => ({
     name: getCategoryById(category).name,
     value: amount,
@@ -60,22 +64,20 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">{formatCurrency(stats.income)}</div>
-            <p className="text-xs text-muted-foreground">
-              For {monthName} {year}
-            </p>
+            <p className="text-xs text-muted-foreground">For {monthName} {year}</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-500">{formatCurrency(stats.expenses)}</div>
-            <p className="text-xs text-muted-foreground">
-              For {monthName} {year}
-            </p>
+            <p className="text-xs text-muted-foreground">For {monthName} {year}</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Balance</CardTitle>
@@ -84,9 +86,7 @@ export default async function DashboardPage() {
             <div className={`text-2xl font-bold ${stats.balance >= 0 ? "text-green-500" : "text-red-500"}`}>
               {formatCurrency(stats.balance)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              For {monthName} {year}
-            </p>
+            <p className="text-xs text-muted-foreground">For {monthName} {year}</p>
           </CardContent>
         </Card>
       </div>
@@ -96,27 +96,18 @@ export default async function DashboardPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
         </TabsList>
+
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Expense Breakdown</CardTitle>
-                <CardDescription>
-                  Your spending by category for {monthName} {year}
-                </CardDescription>
+                <CardDescription>Your spending by category for {monthName} {year}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
+                    <Pie data={pieData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -127,18 +118,18 @@ export default async function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Income vs Expenses</CardTitle>
-                <CardDescription>
-                  Comparison for {monthName} {year}
-                </CardDescription>
+                <CardDescription>Comparison for {monthName} {year}</CardDescription>
               </CardHeader>
               <CardContent>
                 <DashboardCharts stats={stats} />
               </CardContent>
             </Card>
           </div>
+
           <Card>
             <CardHeader>
               <CardTitle>Recent Transactions</CardTitle>
@@ -149,10 +140,11 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="budgets" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {budgetSummary.length > 0 ? (
-              budgetSummary.map((budget) => (
+              budgetSummary.map((budget: BudgetSummary) => (
                 <Card key={budget.id}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium">{getCategoryById(budget.category).name}</CardTitle>
@@ -164,14 +156,13 @@ export default async function DashboardPage() {
                     </div>
                     <Progress
                       value={budget.percentage}
-                      className="mt-2"
-                      indicatorColor={
+                      className={`mt-2 ${
                         budget.percentage > 90
-                          ? "bg-red-500"
+                          ? "[&>div]:bg-red-500"
                           : budget.percentage > 75
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                      }
+                            ? "[&>div]:bg-yellow-500"
+                            : "[&>div]:bg-green-500"
+                      }`}
                     />
                     <p className="mt-2 text-xs text-muted-foreground">
                       {budget.remaining > 0
@@ -200,4 +191,3 @@ export default async function DashboardPage() {
     </div>
   )
 }
-
